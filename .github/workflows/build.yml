@@ -4,26 +4,25 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
       with:
-        python-version: '3.10'
+        distribution: 'temurin'
+        java-version: '17'
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
-        pip install --upgrade pip
-        pip install "buildozer>=1.5.0" cython
-
-    - name: Build with Buildozer
-      run: buildozer -v android debug
+    - name: Build APK via Kivy Container
+      uses: ArtemSuda/Action-Android-Buildozer@v1.3
+      with:
+        buildozer_version: 'stable'
+        requirements: python3,kivy==2.3.0,asyncua
+        permissions: INTERNET
+        archs: arm64-v8a
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
