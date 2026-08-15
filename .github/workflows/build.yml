@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout code
@@ -16,11 +16,20 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build APK via Kivy Container
-      uses: ArtemSBulgakov/buildozer-action@v1
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        buildozer_version: 'stable'
-        command: buildozer android debug
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
+        pip install --upgrade pip
+        pip install "buildozer==1.5.0" cython==0.29.33
+
+    - name: Build with Buildozer
+      run: buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
