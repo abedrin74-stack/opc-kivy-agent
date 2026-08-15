@@ -2,7 +2,7 @@ name: Build APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -17,16 +17,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
-    - name: Cache Buildozer
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.buildozer
-          .buildozer
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
     
     - name: Install system dependencies
       run: |
@@ -54,4 +44,3 @@ jobs:
       with:
         name: OpcAgent-APK
         path: bin/*.apk
-        retention-days: 30
