@@ -22,21 +22,6 @@ jobs:
         pip install --upgrade pip
         pip install "buildozer>=1.5.0" cython
 
-    - name: Generate and configure Buildozer Spec
-      run: |
-        buildozer init
-        # Фиксируем стабильные версии Android инструментов и включаем подробный лог
-        sed -i 's/log_level = 1/log_level = 2/g' buildozer.spec
-        sed -i 's/requirements = python3, kivy/requirements = python3, kivy, asyncua/g' buildozer.spec
-        sed -i 's/# android.permissions =/android.permissions = INTERNET/g' buildozer.spec
-        sed -i 's/# android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
-        sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
-        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-        
-        # Строгая фиксация NDK для защиты от ошибок линковки
-        sed -i 's/# android.ndk = 23b/android.ndk = 25b/g' buildozer.spec
-        sed -i 's/# android.api = 33/android.api = 33/g' buildozer.spec
-
     - name: Build with Buildozer
       run: buildozer -v android debug
 
