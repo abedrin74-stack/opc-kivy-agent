@@ -5,13 +5,12 @@ package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-requirements = python3,kivy,asyncua
+requirements = python3,kivy==2.3.0,asyncua
 
 orientation = portrait
 fullscreen = 1
 android.permissions = INTERNET
 
-# Жестко фиксируем проверенные версии инструментов
 android.api = 33
 android.minapi = 24
 android.ndk = 25b
