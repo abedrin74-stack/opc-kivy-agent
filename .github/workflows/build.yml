@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout code
@@ -18,19 +18,22 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3
+        sudo apt install -y git zip unzip openjdk-17-jdk autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        pip install buildozer cython
+        pip install "buildozer>=1.5.0" cython
 
-    - name: Initialize Buildozer
+    - name: Generate and configure Buildozer Spec
       run: |
         buildozer init
+        # Тонкая и точная настройка параметров сборки
         sed -i 's/requirements = python3, kivy/requirements = python3, kivy, asyncua/g' buildozer.spec
-        sed -i 's/#android.permissions =/android.permissions = INTERNET/g' buildozer.spec
+        sed -i 's/# android.permissions =/android.permissions = INTERNET/g' buildozer.spec
+        sed -i 's/# android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
     - name: Build with Buildozer
-      run: yes | buildozer -v android debug
+      run: buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
