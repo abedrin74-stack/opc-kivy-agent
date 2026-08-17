@@ -1,3 +1,6 @@
+import os
+os.environ["ASYNCUA_NO_CRYPTO"] = "1"  # Защита Xiaomi: отключаем тяжелое шифрование
+
 import asyncio
 from threading import Thread
 import logging
@@ -41,14 +44,11 @@ class OpcMobileAgentApp(App):
         self.btn.bind(on_press=self.manual_reconnect)
         layout.add_widget(self.btn)
 
-        # ЗАЩИТА LOADING ЭКРАНА: Не запускаем поток сразу! 
-        # Даем Kivy 2 секунды на полную отрисовку интерфейса на Xiaomi
+        # Даем Kivy 2 секунды на прорисовку экрана перед запуском сети
         Clock.schedule_once(self.safe_thread_start, 2)
-
         return layout
 
     def safe_thread_start(self, dt):
-        """Этот метод вызывается, когда окно уже гарантированно открыто"""
         logger.info("Интерфейс готов. Безопасный запуск сетевого потока.")
         self.status_label.text = "Status: Init Thread..."
         self.worker_thread = Thread(target=self.start_async_loop, daemon=True)
