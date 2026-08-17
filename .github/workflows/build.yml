@@ -26,7 +26,6 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        # Ставим актуальный Buildozer и Cython 3, готовые к NDK 27
         pip install "buildozer>=1.6.0" "cython==0.29.33"
 
     - name: Generate Clean Buildozer Spec
@@ -39,8 +38,10 @@ jobs:
         echo "source.dir = ." >> buildozer.spec
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
-        # Указываем самую актуальную ветку Kivy master, которая поддерживает новые NDK
+        
+        # Жестко связываем и фиксируем версию Python
         echo "requirements = python3==3.11.0,kivy==master,asyncua" >> buildozer.spec
+        
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 1" >> buildozer.spec
         echo "android.permissions = INTERNET" >> buildozer.spec
