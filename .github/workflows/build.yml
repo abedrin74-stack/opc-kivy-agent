@@ -27,7 +27,7 @@ jobs:
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
         # Ставим актуальный Buildozer и Cython 3, готовые к NDK 27
-        pip install "buildozer>=1.6.0" "cython>=3.0.0"
+        pip install "buildozer>=1.6.0" "cython==0.29.33"
 
     - name: Generate Clean Buildozer Spec
       run: |
