@@ -19,14 +19,14 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        pip install "buildozer==1.5.0" cython==0.29.33
+        pip install "buildozer==1.5.0" "cython<3.0"
 
     - name: Generate Clean Buildozer Spec
       run: |
@@ -38,7 +38,7 @@ jobs:
         echo "source.dir = ." >> buildozer.spec
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
-        echo "requirements = python3,kivy==2.3.0,asyncua" >> buildozer.spec
+        echo "requirements = python3==3.11.0,kivy==2.3.0,asyncua" >> buildozer.spec
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 1" >> buildozer.spec
         echo "android.permissions = INTERNET" >> buildozer.spec
