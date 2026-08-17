@@ -38,13 +38,11 @@ jobs:
         echo "source.dir = ." >> buildozer.spec
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
-        echo "requirements = python3,kivy==master,asyncua" >> buildozer.spec
-        
-        # ПРАВКИ ДЛЯ MIUI XIAOMI:
+        # Собираем без тяжелого крипто-пакета cryptography
+        echo "requirements = python3==3.11.0,kivy==master,asyncua,pyparsing" >> buildozer.spec
         echo "orientation = portrait" >> buildozer.spec
-        echo "fullscreen = 0" >> buildozer.spec  # Выключаем fullscreen (Xioami часто вылетает из-за этого)
-        echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec # Расширяем сетевые права
-        
+        echo "fullscreen = 0" >> buildozer.spec
+        echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
