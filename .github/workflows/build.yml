@@ -16,7 +16,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Python 3.11
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
@@ -38,13 +38,13 @@ jobs:
         echo "source.dir = ." >> buildozer.spec
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
-        
-        # Убираем жесткую фиксацию цифр, чтобы p4a сам выровнял hostpython и python3 по версии 3.11
         echo "requirements = python3,kivy==master,asyncua" >> buildozer.spec
         
+        # ПРАВКИ ДЛЯ MIUI XIAOMI:
         echo "orientation = portrait" >> buildozer.spec
-        echo "fullscreen = 1" >> buildozer.spec
-        echo "android.permissions = INTERNET" >> buildozer.spec
+        echo "fullscreen = 0" >> buildozer.spec  # Выключаем fullscreen (Xioami часто вылетает из-за этого)
+        echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec # Расширяем сетевые права
+        
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
