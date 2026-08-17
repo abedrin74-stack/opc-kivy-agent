@@ -26,7 +26,6 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        # 1.6.0 легально работает на Python 3.11, а старый cython защищает Kivy от ошибок
         pip install "buildozer>=1.6.0" "cython==0.29.33"
 
     - name: Generate Clean Buildozer Spec
@@ -55,6 +54,9 @@ jobs:
         sed -i 's/^[ \t]*//' buildozer.spec
 
     - name: Build with Buildozer
+      env:
+        ANDROID_NDK_HOME: "/home/runner/.buildozer/android/platform/android-ndk-r25b"
+        ANDROID_NDK_ROOT: "/home/runner/.buildozer/android/platform/android-ndk-r25b"
       run: buildozer -v android debug
 
     - name: Upload APK
