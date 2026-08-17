@@ -29,7 +29,7 @@ class OpcMobileAgentApp(App):
         
         layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
         
-        self.status_label = Label(text="Status: Init Thread...", font_size="20sp", size_hint_y=None, height="50dp", color=(1, 1, 0, 1))
+        self.status_label = Label(text="Status: Waiting for start...", font_size="20sp", size_hint_y=None, height="50dp", color=(1, 1, 0, 1))
         self.saw_label = Label(text="Saw (Value): ---", font_size="18sp")
         self.sin_label = Label(text="Sin (Value): ---", font_size="18sp")
         
@@ -41,10 +41,18 @@ class OpcMobileAgentApp(App):
         self.btn.bind(on_press=self.manual_reconnect)
         layout.add_widget(self.btn)
 
-        self.worker_thread = Thread(target=self.start_async_loop, daemon=True)
-        self.worker_thread.start()
+        # ЗАЩИТА LOADING ЭКРАНА: Не запускаем поток сразу! 
+        # Даем Kivy 2 секунды на полную отрисовку интерфейса на Xiaomi
+        Clock.schedule_once(self.safe_thread_start, 2)
 
         return layout
+
+    def safe_thread_start(self, dt):
+        """Этот метод вызывается, когда окно уже гарантированно открыто"""
+        logger.info("Интерфейс готов. Безопасный запуск сетевого потока.")
+        self.status_label.text = "Status: Init Thread..."
+        self.worker_thread = Thread(target=self.start_async_loop, daemon=True)
+        self.worker_thread.start()
 
     def start_async_loop(self):
         loop = asyncio.new_event_loop()
@@ -55,19 +63,15 @@ class OpcMobileAgentApp(App):
         while self.running:
             if self.reconnect_count >= MAX_RECONNECT_ATTEMPTS:
                 Clock.schedule_once(lambda dt: self.update_interface_status("LOST (AUTO RETRY IN 20S)", (1, 0, 0, 1)))
-                logger.warning("Режим сна 20 секунд...")
                 await asyncio.sleep(20)
                 self.reconnect_count = 0  
                 continue
 
             try:
                 if not self.client:
-                    logger.info(f"Подключение... Попытка {self.reconnect_count + 1}")
                     Clock.schedule_once(lambda dt: self.update_interface_status("CONNECTING...", (1, 1, 0, 1)))
                     self.client = Client(url=SERVER_URL)
                     await asyncio.wait_for(self.client.connect(), timeout=4.0)
-                    
-                    logger.info("Успешно подключено!")
                     Clock.schedule_once(lambda dt: self.update_interface_status("ONLINE", (0, 1, 0, 1)))
                     self.reconnect_count = 0  
 
@@ -83,14 +87,11 @@ class OpcMobileAgentApp(App):
                         
                         await asyncio.sleep(POLL_INTERVAL)
 
-                    except (asyncio.TimeoutError, UaError) as inner_e:
-                        logger.error(f"Сбой при чтении тегов: {inner_e}")
-                        raise inner_e 
+                    except (asyncio.TimeoutError, UaError):
+                        raise UaError 
                 
-            except (asyncio.TimeoutError, Exception) as e:
+            except Exception:
                 self.reconnect_count += 1
-                logger.error(f"Ошибка сессии (Попытка {self.reconnect_count}): {e}")
-                
                 Clock.schedule_once(lambda dt: self.update_interface_status("RECONNECTING...", (1, 0.5, 0, 1)))
                 Clock.schedule_once(lambda dt: self.update_tag_value("saw", "---"))
                 Clock.schedule_once(lambda dt: self.update_tag_value("sin", "---"))
@@ -99,11 +100,9 @@ class OpcMobileAgentApp(App):
                     try: await self.client.disconnect()
                     except: pass
                     self.client = None
-                
                 await asyncio.sleep(2 + self.reconnect_count)
 
     def manual_reconnect(self, instance):
-        logger.info("Ручной сброс связи.")
         self.reconnect_count = 0
         Clock.schedule_once(lambda dt: self.update_interface_status("CONNECTING...", (1, 1, 0, 1)))
 
