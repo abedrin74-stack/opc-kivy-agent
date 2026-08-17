@@ -21,12 +21,13 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
+    - name: Install Latest Dependencies
       run: |
         sudo apt update
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        pip install "buildozer>=1.6.0" "cython==0.29.33"
+        # Ставим актуальный Buildozer и Cython 3, готовые к NDK 27
+        pip install "buildozer>=1.6.0" "cython>=3.0.0"
 
     - name: Generate Clean Buildozer Spec
       run: |
@@ -38,14 +39,13 @@ jobs:
         echo "source.dir = ." >> buildozer.spec
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
-        echo "requirements = python3==3.11.0,kivy==2.3.0,asyncua" >> buildozer.spec
+        # Указываем самую актуальную ветку Kivy master, которая поддерживает новые NDK
+        echo "requirements = python3==3.11.0,kivy==master,asyncua" >> buildozer.spec
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 1" >> buildozer.spec
         echo "android.permissions = INTERNET" >> buildozer.spec
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
-        echo "android.ndk = 25b" >> buildozer.spec
-        echo "android.ndk_api = 21" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
         echo "[buildozer]" >> buildozer.spec
@@ -54,9 +54,6 @@ jobs:
         sed -i 's/^[ \t]*//' buildozer.spec
 
     - name: Build with Buildozer
-      env:
-        ANDROID_NDK_HOME: "/home/runner/.buildozer/android/platform/android-ndk-r25b"
-        ANDROID_NDK_ROOT: "/home/runner/.buildozer/android/platform/android-ndk-r25b"
       run: buildozer -v android debug
 
     - name: Upload APK
