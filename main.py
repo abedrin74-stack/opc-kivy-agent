@@ -2,6 +2,15 @@ import os
 # Защита Android: отключаем тяжелое шифрование Rust/Crypto
 os.environ["ASYNCUA_NO_CRYPTO"] = "1"  
 
+# ЖЕСТКАЯ НАСТРОЙКА ГРАФИКИ ДЛЯ XIAOMI/MEDIATEK
+from kivy.config import Config
+Config.set('graphics', 'fullscreen', '0')  # Отключаем полноэкранный режим
+Config.set('graphics', 'resizable', '0')   # Запрещаем изменение размеров окна
+Config.set('graphics', 'multisamples', '0') # Отключаем сглаживание (снижает нагрузку на GPU Mali)
+
+# Защита Android: отключаем тяжелое шифрование Rust/Crypto
+os.environ["ASYNCUA_NO_CRYPTO"] = "1"  
+
 import asyncio
 import logging
 from asyncua import Client
