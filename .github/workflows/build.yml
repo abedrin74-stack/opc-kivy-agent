@@ -42,24 +42,22 @@ jobs:
         echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
-        
-        # ЗАЩИТА ИНТЕРФЕЙСА: Принудительно отключаем fullscreen на уровне ОС Android
         echo "fullscreen = 0" >> buildozer.spec
-        
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        echo "android.api = 33" >> buildozer.spec
+        # Стабильные параметры под Android 11 и чип Mali
+        echo "android.api = 30" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
-        
-        # Фиксируем базовый OpenGL
         echo "android.gl_backend = gl" >> buildozer.spec
         
         echo "[buildozer]" >> buildozer.spec
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
-        echo "p4a.branch = release-2023.10.17" >> buildozer.spec
+        
+        # ТОТАЛЬНАЯ ЗАЩИТА ГРАФИКИ: Переходим на монолитный релиз v1.5.4
+        echo "p4a.branch = v1.5.4" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
 
