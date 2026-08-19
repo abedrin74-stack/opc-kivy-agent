@@ -21,11 +21,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install Pure Stable Compiler Dependencies
+    - name: Install Build Tools via Pip
       run: |
         pip install --upgrade pip
-        # Переходим на эталонную старую версию сборщика для стабильности Си-кода SDL2
-        pip install "buildozer==1.4.0" "cython==0.29.33"
+        # Используем проверенную связку, которая умеет собирать cryptography под Android
+        pip install "buildozer>=1.6.0" "cython>=3.0.0"
 
     - name: Generate Clean Buildozer Spec
       run: |
@@ -38,14 +38,15 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
         
-        echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
+        # ДОБАВЛЕНА КРИПТОГРАФИЯ И ЕЕ ЗАВИСИМОСТИ (openssl), чтобы asyncua не вылетал
+        echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six,cryptography,openssl" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Классические параметры под Android 11 и MediaTek
-        echo "android.api = 30" >> buildozer.spec
+        # Заголовки для успешной сборки Java
+        echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
@@ -54,8 +55,6 @@ jobs:
         echo "[buildozer]" >> buildozer.spec
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
-        
-        # Возвращаем мастер-ветку, но в связке с Buildozer 1.4.0 она соберет старый надежный SDL2
         echo "p4a.branch = master" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
