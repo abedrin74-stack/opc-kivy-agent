@@ -45,8 +45,8 @@ jobs:
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Стабильные параметры под Android 11 и чип Mali
-        echo "android.api = 30" >> buildozer.spec
+        # Защита Java: Даем компилятору увидеть символы HIDDeviceManager
+        echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
@@ -56,10 +56,14 @@ jobs:
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
         
-        # ТОТАЛЬНАЯ ЗАЩИТА ГРАФИКИ: Переходим на монолитный релиз v1.5.4
-        echo "p4a.branch = v1.5.4" >> buildozer.spec
+        # Блокируем стабильную ветку
+        echo "p4a.branch = release-2023.10.17" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
+
+    # КРИТИЧЕСКИЙ ШАГ: Стираем старый забагованный кэш p4a внутри окружения
+    - name: Clean Buildozer Cache
+      run: buildozer android clean
 
     - name: Build with Buildozer
       run: buildozer -v android debug
