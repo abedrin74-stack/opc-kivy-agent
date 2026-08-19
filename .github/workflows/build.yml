@@ -21,7 +21,6 @@ jobs:
       with:
         python-version: '3.11'
 
-    # БЕЗОПАСНЫЙ СБОРЩИК: Возвращаем проверенные вами версии, спасая PIP от краха
     - name: Install Build Tools via Pip
       run: |
         pip install --upgrade pip
@@ -38,14 +37,14 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
         
-        # ПОЛНЫЙ НАБОР: Добавлена cryptography и openssl под чистый флаг python3
-        echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six,cryptography,openssl" >> buildozer.spec
+        # ЧИСТЫЙ СПИСОК БЕЗ ТЯЖЕЛОГО RUST-ШИФРОВАНИЯ (Вырезана криптография)
+        echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Настройки под Java-компилятор и ваш Redmi Note 8 Pro
+        # Настройки компиляции
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
@@ -55,7 +54,9 @@ jobs:
         echo "[buildozer]" >> buildozer.spec
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
-        echo "p4a.branch = master" >> buildozer.spec
+        
+        # Фиксируем стабильный срез, где Python 3.11 - основной и стабильный
+        echo "p4a.branch = release-2024.01.21" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
 
