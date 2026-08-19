@@ -1,15 +1,15 @@
 import os
-# Защита Android: отключаем тяжелое шифрование Rust/Crypto
+# 1. Защита Android: отключаем тяжелое шифрование Rust/Crypto
 os.environ["ASYNCUA_NO_CRYPTO"] = "1"  
 
-# ЖЕСТКАЯ НАСТРОЙКА ГРАФИКИ ДЛЯ XIAOMI/MEDIATEK
+# 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
+os.environ["KIVY_GL_BACKEND"] = "sdl2" 
+
 from kivy.config import Config
-Config.set('graphics', 'fullscreen', '0')  # Отключаем полноэкранный режим
-Config.set('graphics', 'resizable', '0')   # Запрещаем изменение размеров окна
-Config.set('graphics', 'multisamples', '0') # Отключаем сглаживание (снижает нагрузку на GPU Mali)
-
-# Защита Android: отключаем тяжелое шифрование Rust/Crypto
-os.environ["ASYNCUA_NO_CRYPTO"] = "1"  
+Config.set('graphics', 'fullscreen', '0')    # Отключаем полноэкранный режим
+Config.set('graphics', 'resizable', '0')     # Фиксируем размер окна
+Config.set('graphics', 'multisamples', '0')  # Отключаем сглаживание (снижает нагрузку на GPU)
+Config.set('graphics', 'soft_render', '1')   # Включаем программный буфер вывода для стабильности SDL2
 
 import asyncio
 import logging
@@ -24,6 +24,7 @@ from kivy.clock import Clock
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("OpcAgent")
 
+# Укажите актуальный IP вашего компьютера с MasterOPC
 SERVER_URL = "opc.tcp://192.168.1.62:54000"
 POLL_INTERVAL = 0.2  
 MAX_RECONNECT_ATTEMPTS = 5
@@ -54,12 +55,12 @@ class OpcMobileAgentApp(App):
         self.btn.bind(on_press=self.manual_reconnect)
         layout.add_widget(self.btn)
 
-        # Пауза 3 секунды для инициализации экрана на MIUI
+        # Пауза 3 секунды для безопасной инициализации окна на MIUI 12.5.3
         Clock.schedule_once(self.safe_async_start, 3)
         return layout
 
     def safe_async_start(self, dt):
-        logger.info("SDL2 Окно готово. Безопасное планирование корутины.")
+        logger.info("Графическое окно готово. Планирование асинко-задачи.")
         self.update_interface_status("ONLINE LOOP STARTED", (1, 1, 0, 1))
         self.network_task = asyncio.ensure_future(self.poll_opc_loop())
 
