@@ -45,14 +45,13 @@ class OpcMobileAgentApp(App):
         self.btn.bind(on_press=self.manual_reconnect)
         layout.add_widget(self.btn)
 
-        # Увеличиваем паузу до 3 секунд. Даем Xiaomi гарантированно поднять SDL-окно.
+        # Пауза 3 секунды для инициализации экрана на MIUI
         Clock.schedule_once(self.safe_async_start, 3)
         return layout
 
     def safe_async_start(self, dt):
         logger.info("SDL2 Окно готово. Безопасное планирование корутины.")
         self.update_interface_status("ONLINE LOOP STARTED", (1, 1, 0, 1))
-        # Регистрируем задачу в текущем запущенном цикле Kivy
         self.network_task = asyncio.ensure_future(self.poll_opc_loop())
 
     async def poll_opc_loop(self):
@@ -99,10 +98,8 @@ class OpcMobileAgentApp(App):
                 self.update_tag_value("sin", "---")
                 
                 if self.client:
-                    try: 
-                        await self.client.disconnect()
-                    except: 
-                        pass
+                    try: await self.client.disconnect()
+                    except: pass
                     self.client = None
                 
                 await asyncio.sleep(2 + self.reconnect_count)
@@ -134,7 +131,6 @@ class OpcMobileAgentApp(App):
         if self.network_task:
             self.network_task.cancel()
 
-# Альтернативная, бесконфликтная точка входа для Android SDL2
 async def main():
     await OpcMobileAgentApp().async_run(async_lib='asyncio')
 
