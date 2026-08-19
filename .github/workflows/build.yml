@@ -10,7 +10,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # УМНОЕ КЭШИРОВАНИЕ: Ускоряет сборку в 5 раз
     - name: Cache Buildozer global directory
       uses: actions/cache@v4
       with:
@@ -41,7 +40,6 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        # Безопасная версия Cython, которую требует сам Buildozer 1.6.0
         pip install "buildozer>=1.6.0" "cython==0.29.33"
 
     - name: Generate Clean Buildozer Spec
@@ -55,26 +53,26 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
         
-        # Чистый python3 без жестких цифр защищает от ошибки 3.11 != 3.14
         echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Современный стандарт Google Play
-        echo "android.api = 34" >> buildozer.spec
+        # ТОЧНОЕ ПОПАДАНИЕ ПОД ANDROID 11 (MIUI 12.5.3) НА MEDIATEK
+        echo "android.api = 30" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
-        
-        # ЗАЩИТА ГРАФИКИ XIAOMI: Принудительный бэкенд OpenGL ES 2.0
         echo "android.gl_backend = gl" >> buildozer.spec
         
         echo "[buildozer]" >> buildozer.spec
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
-        echo "p4a.branch = master" >> buildozer.spec
+        
+        # Стабильная протестированная ветка
+        echo "p4a.branch = release-2024.01.21" >> buildozer.spec
+        
         sed -i 's/^[ \t]*//' buildozer.spec
 
     - name: Build with Buildozer
