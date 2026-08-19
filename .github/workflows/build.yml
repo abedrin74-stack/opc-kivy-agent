@@ -10,12 +10,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # Очищаем кэш для чистой пересборки Java-частей
-    - name: Clear corrupted cache
-      run: |
-        rm -rf ~/.buildozer
-        rm -rf .buildozer
-
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -48,21 +42,23 @@ jobs:
         echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
+        
+        # ЗАЩИТА ИНТЕРФЕЙСА: Принудительно отключаем fullscreen на уровне ОС Android
         echo "fullscreen = 0" >> buildozer.spec
+        
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # КОРРЕКЦИЯ: Повышаем API компиляции для Java, сохраняя совместимость с Android 11
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
+        
+        # Фиксируем базовый OpenGL
         echo "android.gl_backend = gl" >> buildozer.spec
         
         echo "[buildozer]" >> buildozer.spec
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
-        
-        # Наша стабильная проверенная ветка
         echo "p4a.branch = release-2023.10.17" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
