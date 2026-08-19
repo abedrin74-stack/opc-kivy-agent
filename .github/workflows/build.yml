@@ -21,7 +21,6 @@ jobs:
       with:
         python-version: '3.11'
 
-    # БЕЗЗАВИСНЫЙ ШАГ: Убрали apt update, используем предустановленные системные пакеты
     - name: Install Build Tools via Pip
       run: |
         pip install --upgrade pip
@@ -44,7 +43,7 @@ jobs:
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Полная совместимость Java и графики Redmi Note 8 Pro
+        # Совместимость Java и графики Redmi Note 8 Pro
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
@@ -55,15 +54,12 @@ jobs:
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
         
-        # Наша стабильная проверенная ветка
+        # Стабильная релизная ветка
         echo "p4a.branch = release-2023.10.17" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
 
-    # Стираем остатки старого забагованного кэша python3.14
-    - name: Clean Buildozer Cache
-      run: buildozer android clean
-
+    # Сборка сразу с чистого листа
     - name: Build with Buildozer
       run: buildozer -v android debug
 
