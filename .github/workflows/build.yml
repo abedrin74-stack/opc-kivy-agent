@@ -10,7 +10,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # Очищаем поврежденные остатки Python 3.14
+    # Очищаем кэш для чистой пересборки Java-частей
     - name: Clear corrupted cache
       run: |
         rm -rf ~/.buildozer
@@ -32,7 +32,6 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
-        # Идеальная связка для сборки без конфликтов
         pip install "buildozer>=1.6.0" "cython==0.29.33"
 
     - name: Generate Clean Buildozer Spec
@@ -46,15 +45,14 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
         
-        # ВОЗВРАТ К СТАБИЛЬНОСТИ: Чистый флаг python3, который выровняет версии автоматически
         echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Параметры под ваш Redmi Note 8 Pro (Android 11)
-        echo "android.api = 30" >> buildozer.spec
+        # КОРРЕКЦИЯ: Повышаем API компиляции для Java, сохраняя совместимость с Android 11
+        echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
@@ -64,7 +62,7 @@ jobs:
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
         
-        # ЗАЩИТА ОТ 3.14: Эта релизная ветка намертво изолирована от экспериментального кода
+        # Наша стабильная проверенная ветка
         echo "p4a.branch = release-2023.10.17" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
