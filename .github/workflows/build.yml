@@ -21,10 +21,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install Build Tools via Pip
+    - name: Install Pure Stable Compiler Dependencies
       run: |
         pip install --upgrade pip
-        pip install "buildozer>=1.6.0" "cython==0.29.33"
+        # Переходим на эталонную старую версию сборщика для стабильности Си-кода SDL2
+        pip install "buildozer==1.4.0" "cython==0.29.33"
 
     - name: Generate Clean Buildozer Spec
       run: |
@@ -43,8 +44,8 @@ jobs:
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Совместимость Java и графики Redmi Note 8 Pro
-        echo "android.api = 33" >> buildozer.spec
+        # Классические параметры под Android 11 и MediaTek
+        echo "android.api = 30" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
         echo "android.accept_sdk_license = True" >> buildozer.spec
@@ -54,12 +55,11 @@ jobs:
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
         
-        # Стабильная релизная ветка
-        echo "p4a.branch = release-2023.10.17" >> buildozer.spec
+        # Возвращаем мастер-ветку, но в связке с Buildozer 1.4.0 она соберет старый надежный SDL2
+        echo "p4a.branch = master" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
 
-    # Сборка сразу с чистого листа
     - name: Build with Buildozer
       run: buildozer -v android debug
 
