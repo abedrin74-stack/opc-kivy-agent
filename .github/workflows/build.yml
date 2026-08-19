@@ -21,10 +21,9 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install Pure Stable Compiler Dependencies
+    # БЕЗЗАВИСНЫЙ ШАГ: Убрали apt update, используем предустановленные системные пакеты
+    - name: Install Build Tools via Pip
       run: |
-        sudo apt update
-        sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev sqlite3 libtinfo6
         pip install --upgrade pip
         pip install "buildozer>=1.6.0" "cython==0.29.33"
 
@@ -45,7 +44,7 @@ jobs:
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Защита Java: Даем компилятору увидеть символы HIDDeviceManager
+        # Полная совместимость Java и графики Redmi Note 8 Pro
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
@@ -56,12 +55,12 @@ jobs:
         echo "log_level = 2" >> buildozer.spec
         echo "warn_on_root = 1" >> buildozer.spec
         
-        # Блокируем стабильную ветку
+        # Наша стабильная проверенная ветка
         echo "p4a.branch = release-2023.10.17" >> buildozer.spec
         
         sed -i 's/^[ \t]*//' buildozer.spec
 
-    # КРИТИЧЕСКИЙ ШАГ: Стираем старый забагованный кэш p4a внутри окружения
+    # Стираем остатки старого забагованного кэша python3.14
     - name: Clean Buildozer Cache
       run: buildozer android clean
 
