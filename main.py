@@ -8,14 +8,18 @@ os.environ["ASYNCUA_NO_CRYPTO"] = "1"
 # 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
 os.environ["KIVY_GL_BACKEND"] = "sdl2" 
 
-# 3. ВИРТУАЛЬНАЯ ЗАГЛУШКА КРИПТОГРАФИИ ДЛЯ ЗАЩИТЫ ОТ MODULE_NOT_FOUND_ERROR
-# Динамически создаем пустые объекты в sys.modules, перехватывая любые подмодули hazmat
+# 3. ИДЕАЛЬНАЯ ВИРТУАЛЬНАЯ ЗАГЛУШКА ДЛЯ ИНТЕГРАЦИИ В IMPORTLIB
 class MockModule(ModuleType):
-    def __getattr__(self, name):
-        # При попытке обратиться к любому подмодулю (primitives, x509) возвращаем саму же заглушку
-        return MockModule(name)
+    def __init__(self, name):
+        super().__init__(name)
+        self.__path__ = []  # Защита от TypeError: объект подсистемы импорта теперь итерируем!
+        self.__all__ = []
 
-# Регистрируем виртуальную структуру в ядре интерпретатора Python
+    def __getattr__(self, name):
+        # Автоматически генерируем дочерние подмодули «на лету»
+        return MockModule(f"{self.__name__}.{name}")
+
+# Регистрируем всю иерархию пакета шифрования в оперативной памяти интерпретатора
 sys.modules['cryptography'] = MockModule('cryptography')
 sys.modules['cryptography.hazmat'] = MockModule('cryptography.hazmat')
 sys.modules['cryptography.hazmat.bindings'] = MockModule('cryptography.hazmat.bindings')
