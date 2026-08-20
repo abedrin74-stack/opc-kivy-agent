@@ -37,14 +37,13 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
         
-        # ЧИСТЫЙ СПИСОК БЕЗ КОНФЛИКТНЫХ RUST-БИБЛИОТЕК
+        # ЧИСТЫЙ СПИСОК РЕКВАЙРМЕНТОВ
         echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 0" >> buildozer.spec
         echo "android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE" >> buildozer.spec
         
-        # Параметры под ваш Redmi Note 8 Pro
         echo "android.api = 33" >> buildozer.spec
         echo "android.minapi = 24" >> buildozer.spec
         echo "android.archs = arm64-v8a" >> buildozer.spec
@@ -59,7 +58,10 @@ jobs:
         sed -i 's/^[ \t]*//' buildozer.spec
 
     - name: Build with Buildozer
-      run: buildozer -v android debug
+      run: |
+        # ПРИНУДИТЕЛЬНАЯ БЛОКИРОВКА HOSTPYTHON: заставляем p4a использовать системный 3.11 вместо экспериментального 3.14
+        export P4A_hostpython=/opt/hostedtoolcache/Python/3.11.16/x64/bin/python
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
