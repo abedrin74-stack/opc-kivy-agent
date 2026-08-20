@@ -37,8 +37,8 @@ jobs:
         echo "source.include_exts = py,png,jpg,kv,atlas" >> buildozer.spec
         echo "version = 0.1" >> buildozer.spec
         
-        # ТОТАЛЬНЫЙ НАБОР: Все скрытые сетевые и парсинговые библиотеки asyncua добавлены!
-        echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six,pytz,anyio,async_timeout,h11" >> buildozer.spec
+        # МАКСИМАЛЬНЫЙ НАБОР: Добавлены sniffio, idna и openssl для полной сетевой изоляции
+        echo "requirements = python3,kivy==stable,asyncua,pyparsing,typing_extensions,python-dateutil,six,pytz,anyio,async_timeout,h11,sniffio,idna,openssl" >> buildozer.spec
         
         echo "orientation = portrait" >> buildozer.spec
         echo "fullscreen = 0" >> buildozer.spec
