@@ -8,25 +8,26 @@ os.environ["ASYNCUA_NO_CRYPTO"] = "1"
 # 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
 os.environ["KIVY_GL_BACKEND"] = "sdl2" 
 
-# 3. ИДЕАЛЬНАЯ ВИРТУАЛЬНАЯ ЗАГЛУШКА ДЛЯ ИНТЕГРАЦИИ В IMPORTLIB
-class MockModule(ModuleType):
+# 3. АВТОМАТИЧЕСКИЙ ДИНАМИЧЕСКИЙ СУПЕР-ПЕРЕХВАТЧИК КРИПТОГРАФИИ
+class DynamicMockModule(ModuleType):
     def __init__(self, name):
         super().__init__(name)
-        self.__path__ = []  # Защита от TypeError: объект подсистемы импорта теперь итерируем!
+        self.__path__ = []
         self.__all__ = []
 
     def __getattr__(self, name):
-        # Автоматически генерируем дочерние подмодули «на лету»
-        return MockModule(f"{self.__name__}.{name}")
+        # При попытке получить любой атрибут или подмодуль, генерируем новый путь
+        full_name = f"{self.__name__}.{name}"
+        if full_name not in sys.modules:
+            sys.modules[full_name] = DynamicMockModule(full_name)
+        return sys.modules[full_name]
 
-# Регистрируем всю иерархию пакета шифрования в оперативной памяти интерпретатора
-sys.modules['cryptography'] = MockModule('cryptography')
-sys.modules['cryptography.hazmat'] = MockModule('cryptography.hazmat')
-sys.modules['cryptography.hazmat.bindings'] = MockModule('cryptography.hazmat.bindings')
-sys.modules['cryptography.hazmat.primitives'] = MockModule('cryptography.hazmat.primitives')
-sys.modules['cryptography.hazmat.primitives.asymmetric'] = MockModule('cryptography.hazmat.primitives.asymmetric')
-sys.modules['cryptography.hazmat.primitives.serialization'] = MockModule('cryptography.hazmat.primitives.serialization')
-sys.modules['cryptography.x509'] = MockModule('cryptography.x509')
+# Загоняем базовые пути в sys.modules
+sys.modules['cryptography'] = DynamicMockModule('cryptography')
+sys.modules['cryptography.hazmat'] = sys.modules['cryptography'].hazmat
+sys.modules['cryptography.hazmat.primitives'] = sys.modules['cryptography'].hazmat.primitives
+sys.modules['cryptography.hazmat.primitives.asymmetric'] = sys.modules['cryptography'].hazmat.primitives.asymmetric
+sys.modules['cryptography.hazmat.primitives.asymmetric.types'] = sys.modules['cryptography'].hazmat.primitives.asymmetric.types
 
 # Настройка графического вывода Kivy
 from kivy.config import Config
