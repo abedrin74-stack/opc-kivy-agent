@@ -8,14 +8,15 @@ os.environ["ASYNCUA_NO_CRYPTO"] = "1"
 # 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
 os.environ["KIVY_GL_BACKEND"] = "sdl2" 
 
-# 3. ТОТАЛЬНЫЙ ПЕРЕХВАТЧИК СИ-МОДУЛЕЙ И ПРИВАТНЫХ СТРУКТУР
+# 3. ТОТАЛЬНЫЙ ИНТЕЛЛЕКТУАЛЬНЫЙ ПЕРЕХВАТЧИК (Имитирует модули, классы и исключения)
 class SmartMeta(type):
     def __instancecheck__(cls, instance):
         return False
     def __subclasscheck__(cls, subclass):
         return False
 
-class UniversalMockModule(ModuleType, metaclass=SmartMeta):
+# Наследуем класс от BaseException, чтобы его можно было использовать в блоках except ...
+class UniversalMockModule(ModuleType, BaseException, metaclass=SmartMeta):
     def __init__(self, name):
         super().__init__(name)
         self.__path__ = []
@@ -23,8 +24,6 @@ class UniversalMockModule(ModuleType, metaclass=SmartMeta):
         self.__file__ = __file__
 
     def __getattr__(self, name):
-        # Если имя начинается с нижнего подчеркивания, Python ищет приватный Си-класс. 
-        # Отдаем этот же Mock-объект, защищая от ModuleNotFoundError.
         full_name = f"{self.__name__}.{name}"
         if full_name not in sys.modules:
             sys.modules[full_name] = UniversalMockModule(full_name)
@@ -33,15 +32,17 @@ class UniversalMockModule(ModuleType, metaclass=SmartMeta):
     def __call__(self, *args, **kwargs):
         return self
 
-# Жестко перекрываем корень и все вычисленные логгером ветки импорта
+# Полная и исчерпывающая карта импортов cryptography, используемая внутри asyncua
 mock_root = UniversalMockModule('cryptography')
 sys.modules['cryptography'] = mock_root
+sys.modules['cryptography.exceptions'] = mock_root.exceptions
 sys.modules['cryptography.hazmat'] = mock_root.hazmat
-sys.modules['cryptography.hazmat._oid'] = mock_root.hazmat._oid  # ЗАКРЫВАЕМ ОШИБКУ ИЗ ЛОГА!
+sys.modules['cryptography.hazmat._oid'] = mock_root.hazmat._oid
 sys.modules['cryptography.hazmat.bindings'] = mock_root.hazmat.bindings
 sys.modules['cryptography.hazmat.primitives'] = mock_root.hazmat.primitives
 sys.modules['cryptography.hazmat.primitives.asymmetric'] = mock_root.hazmat.primitives.asymmetric
 sys.modules['cryptography.hazmat.primitives.asymmetric.types'] = mock_root.hazmat.primitives.asymmetric.types
+sys.modules['cryptography.hazmat.primitives.asymmetric.padding'] = mock_root.hazmat.primitives.asymmetric.padding
 sys.modules['cryptography.hazmat.primitives.serialization'] = mock_root.hazmat.primitives.serialization
 sys.modules['cryptography.x509'] = mock_root.x509
 sys.modules['cryptography.x509.oid'] = mock_root.x509.oid
