@@ -8,33 +8,42 @@ os.environ["ASYNCUA_NO_CRYPTO"] = "1"
 # 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
 os.environ["KIVY_GL_BACKEND"] = "sdl2" 
 
-# 3. УНИВЕРСАЛЬНЫЙ СУПЕР-ПЕРЕХВАТЧИК СТРУКТУР И КЛАССОВ КРИПТОГРАФИИ
-class UniversalMockModule(ModuleType):
+# 3. ИНТЕЛЛЕКТУАЛЬНЫЙ СУПЕР-ПЕРЕХВАТЧИК: Имитирует типы данных для isinstance()
+class SmartMeta(type):
+    # Заставляем любой запрос isinstance(obj, Mock) возвращать False вместо краха TypeError
+    def __instancecheck__(cls, instance):
+        return False
+    def __subclasscheck__(cls, subclass):
+        return False
+
+class UniversalMockModule(ModuleType, metaclass=SmartMeta):
     def __init__(self, name):
         super().__init__(name)
         self.__path__ = []
         self.__all__ = []
+        self.__file__ = __file__
 
     def __getattr__(self, name):
-        # Если подсистема импорта ищет подмодуль, регистрируем его в sys.modules
         full_name = f"{self.__name__}.{name}"
         if full_name not in sys.modules:
+            # Создаем дочерний модуль, который одновременно является и "типом данных"
             sys.modules[full_name] = UniversalMockModule(full_name)
         return sys.modules[full_name]
 
     def __call__(self, *args, **kwargs):
-        # Если asyncua попытается вызвать "класс" из заглушки как конструктор, возвращаем self
         return self
 
-# Перехватываем корень и все возможные ветки импорта asyncua
-sys.modules['cryptography'] = UniversalMockModule('cryptography')
-sys.modules['cryptography.hazmat'] = sys.modules['cryptography'].hazmat
-sys.modules['cryptography.hazmat.bindings'] = sys.modules['cryptography'].hazmat.bindings
-sys.modules['cryptography.hazmat.primitives'] = sys.modules['cryptography'].hazmat.primitives
-sys.modules['cryptography.hazmat.primitives.asymmetric'] = sys.modules['cryptography'].hazmat.primitives.asymmetric
-sys.modules['cryptography.hazmat.primitives.asymmetric.types'] = sys.modules['cryptography'].hazmat.primitives.asymmetric.types
-sys.modules['cryptography.x509'] = sys.modules['cryptography'].x509
-sys.modules['cryptography.x509.oid'] = sys.modules['cryptography'].x509.oid
+# Намертво закрываем дерево импортов в sys.modules
+mock_root = UniversalMockModule('cryptography')
+sys.modules['cryptography'] = mock_root
+sys.modules['cryptography.hazmat'] = mock_root.hazmat
+sys.modules['cryptography.hazmat.bindings'] = mock_root.hazmat.bindings
+sys.modules['cryptography.hazmat.primitives'] = mock_root.hazmat.primitives
+sys.modules['cryptography.hazmat.primitives.asymmetric'] = mock_root.hazmat.primitives.asymmetric
+sys.modules['cryptography.hazmat.primitives.asymmetric.types'] = mock_root.hazmat.primitives.asymmetric.types
+sys.modules['cryptography.hazmat.primitives.serialization'] = mock_root.hazmat.primitives.serialization
+sys.modules['cryptography.x509'] = mock_root.x509
+sys.modules['cryptography.x509.oid'] = mock_root.x509.oid
 
 # Настройка графического вывода Kivy
 from kivy.config import Config
