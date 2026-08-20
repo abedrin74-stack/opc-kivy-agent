@@ -1,15 +1,35 @@
 import os
+import sys
+from types import ModuleType
+
 # 1. Защита Android: отключаем тяжелое шифрование Rust/Crypto
 os.environ["ASYNCUA_NO_CRYPTO"] = "1"  
 
 # 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
 os.environ["KIVY_GL_BACKEND"] = "sdl2" 
 
+# 3. ВИРТУАЛЬНАЯ ЗАГЛУШКА КРИПТОГРАФИИ ДЛЯ ЗАЩИТЫ ОТ MODULE_NOT_FOUND_ERROR
+# Динамически создаем пустые объекты в sys.modules, перехватывая любые подмодули hazmat
+class MockModule(ModuleType):
+    def __getattr__(self, name):
+        # При попытке обратиться к любому подмодулю (primitives, x509) возвращаем саму же заглушку
+        return MockModule(name)
+
+# Регистрируем виртуальную структуру в ядре интерпретатора Python
+sys.modules['cryptography'] = MockModule('cryptography')
+sys.modules['cryptography.hazmat'] = MockModule('cryptography.hazmat')
+sys.modules['cryptography.hazmat.bindings'] = MockModule('cryptography.hazmat.bindings')
+sys.modules['cryptography.hazmat.primitives'] = MockModule('cryptography.hazmat.primitives')
+sys.modules['cryptography.hazmat.primitives.asymmetric'] = MockModule('cryptography.hazmat.primitives.asymmetric')
+sys.modules['cryptography.hazmat.primitives.serialization'] = MockModule('cryptography.hazmat.primitives.serialization')
+sys.modules['cryptography.x509'] = MockModule('cryptography.x509')
+
+# Настройка графического вывода Kivy
 from kivy.config import Config
-Config.set('graphics', 'fullscreen', '0')    # Отключаем полноэкранный режим
-Config.set('graphics', 'resizable', '0')     # Фиксируем размер окна
-Config.set('graphics', 'multisamples', '0')  # Отключаем сглаживание (снижает нагрузку на GPU)
-Config.set('graphics', 'soft_render', '1')   # Включаем программный буфер вывода для стабильности SDL2
+Config.set('graphics', 'fullscreen', '0')    
+Config.set('graphics', 'resizable', '0')     
+Config.set('graphics', 'multisamples', '0')  
+Config.set('graphics', 'soft_render', '1')   
 
 import asyncio
 import logging
@@ -24,7 +44,6 @@ from kivy.clock import Clock
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("OpcAgent")
 
-# Укажите актуальный IP вашего компьютера с MasterOPC
 SERVER_URL = "opc.tcp://192.168.1.62:54000"
 POLL_INTERVAL = 0.2  
 MAX_RECONNECT_ATTEMPTS = 5
@@ -55,7 +74,6 @@ class OpcMobileAgentApp(App):
         self.btn.bind(on_press=self.manual_reconnect)
         layout.add_widget(self.btn)
 
-        # Пауза 3 секунды для безопасной инициализации окна на MIUI 12.5.3
         Clock.schedule_once(self.safe_async_start, 3)
         return layout
 
