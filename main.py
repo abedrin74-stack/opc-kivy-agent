@@ -8,26 +8,33 @@ os.environ["ASYNCUA_NO_CRYPTO"] = "1"
 # 2. ЖЕСТКИЙ ОБХОД КРАША SDL2 ДЛЯ ЧИПСЕТОВ MEDIATEK / GPU MALI
 os.environ["KIVY_GL_BACKEND"] = "sdl2" 
 
-# 3. АВТОМАТИЧЕСКИЙ ДИНАМИЧЕСКИЙ СУПЕР-ПЕРЕХВАТЧИК КРИПТОГРАФИИ
-class DynamicMockModule(ModuleType):
+# 3. УНИВЕРСАЛЬНЫЙ СУПЕР-ПЕРЕХВАТЧИК СТРУКТУР И КЛАССОВ КРИПТОГРАФИИ
+class UniversalMockModule(ModuleType):
     def __init__(self, name):
         super().__init__(name)
         self.__path__ = []
         self.__all__ = []
 
     def __getattr__(self, name):
-        # При попытке получить любой атрибут или подмодуль, генерируем новый путь
+        # Если подсистема импорта ищет подмодуль, регистрируем его в sys.modules
         full_name = f"{self.__name__}.{name}"
         if full_name not in sys.modules:
-            sys.modules[full_name] = DynamicMockModule(full_name)
+            sys.modules[full_name] = UniversalMockModule(full_name)
         return sys.modules[full_name]
 
-# Загоняем базовые пути в sys.modules
-sys.modules['cryptography'] = DynamicMockModule('cryptography')
+    def __call__(self, *args, **kwargs):
+        # Если asyncua попытается вызвать "класс" из заглушки как конструктор, возвращаем self
+        return self
+
+# Перехватываем корень и все возможные ветки импорта asyncua
+sys.modules['cryptography'] = UniversalMockModule('cryptography')
 sys.modules['cryptography.hazmat'] = sys.modules['cryptography'].hazmat
+sys.modules['cryptography.hazmat.bindings'] = sys.modules['cryptography'].hazmat.bindings
 sys.modules['cryptography.hazmat.primitives'] = sys.modules['cryptography'].hazmat.primitives
 sys.modules['cryptography.hazmat.primitives.asymmetric'] = sys.modules['cryptography'].hazmat.primitives.asymmetric
 sys.modules['cryptography.hazmat.primitives.asymmetric.types'] = sys.modules['cryptography'].hazmat.primitives.asymmetric.types
+sys.modules['cryptography.x509'] = sys.modules['cryptography'].x509
+sys.modules['cryptography.x509.oid'] = sys.modules['cryptography'].x509.oid
 
 # Настройка графического вывода Kivy
 from kivy.config import Config
